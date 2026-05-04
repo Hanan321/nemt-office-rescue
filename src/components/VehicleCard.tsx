@@ -27,12 +27,20 @@ function formatDate(date: string) {
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const isVin = label === "VIN";
+
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+    <div className="min-w-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
       <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </dt>
-      <dd className="mt-1 text-sm font-semibold text-slate-900">{value}</dd>
+      <dd
+        className={`mt-1 min-w-0 font-semibold leading-snug text-slate-900 [overflow-wrap:anywhere] ${
+          isVin ? "text-xs sm:text-[13px]" : "text-sm"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
