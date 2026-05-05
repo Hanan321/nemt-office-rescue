@@ -280,7 +280,7 @@ export default function VehicleCard({
         </span>
 
         <span
-          className={`absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border p-6 text-left shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+          className={`absolute inset-0 flex h-full w-full flex-col overflow-x-hidden overflow-y-auto rounded-lg border p-6 text-left shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)] ${
             isArchived
               ? "border-slate-300 bg-slate-100 shadow-none"
               : `${styles.card} ${styles.body}`
