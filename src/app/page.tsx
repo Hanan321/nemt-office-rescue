@@ -1,5 +1,4 @@
 import VehicleFleet from "../components/VehicleFleet";
-import { vehicles } from "../data/vehicles";
 
 export default function Home() {
   return (
@@ -18,7 +17,7 @@ export default function Home() {
           </p>
         </div>
 
-        <VehicleFleet vehicles={vehicles} />
+        <VehicleFleet />
       </section>
     </main>
   );

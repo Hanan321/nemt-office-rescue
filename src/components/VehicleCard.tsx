@@ -6,6 +6,12 @@ import type { Vehicle } from "../data/vehicles";
 
 type VehicleCardProps = {
   vehicle: Vehicle;
+  onEdit?: (vehicle: Vehicle) => void;
+  onArchive?: (vehicleId: string) => void;
+  onRestore?: (vehicleId: string) => void;
+  onViewGasRecords?: (vehicle: Vehicle) => void;
+  onViewMaintenanceRecords?: (vehicle: Vehicle) => void;
+  isArchived?: boolean;
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -22,8 +28,42 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+const monthFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
 function formatDate(date: string) {
   return dateFormatter.format(new Date(`${date}T00:00:00Z`));
+}
+
+function getRecordMonthKey(date: string) {
+  return date.slice(0, 7);
+}
+
+function getCurrentMonthKey() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+
+  return `${now.getFullYear()}-${month}`;
+}
+
+function formatMonthKey(monthKey: string) {
+  return monthFormatter.format(new Date(`${monthKey}-01T00:00:00Z`));
+}
+
+function totalMonthCosts(
+  records: { date: string; amount: number }[],
+  monthKey: string,
+) {
+  return records
+    .filter((record) => getRecordMonthKey(record.date) === monthKey)
+    .reduce((total, record) => total + record.amount, 0);
+}
+
+function formatMonthlyCost(total: number, emptyLabel: string) {
+  return total === 0 ? emptyLabel : currencyFormatter.format(total);
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -116,11 +156,30 @@ const statusStyles: Record<
   },
 };
 
-export default function VehicleCard({ vehicle }: VehicleCardProps) {
+export default function VehicleCard({
+  vehicle,
+  onEdit,
+  onArchive,
+  onRestore,
+  onViewGasRecords,
+  onViewMaintenanceRecords,
+  isArchived = false,
+}: VehicleCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const hasWarnings = vehicle.warnings.length > 0;
   const showFrontBadge = vehicle.status !== "Ready" && vehicle.status !== "In service";
   const styles = statusStyles[vehicle.status];
+  const costSummaryMonthKey = getCurrentMonthKey();
+  const costSummaryMonth = formatMonthKey(costSummaryMonthKey);
+  const monthlyGasTotal = totalMonthCosts(
+    vehicle.gasExpenses,
+    costSummaryMonthKey,
+  );
+  const monthlyMaintenanceTotal = totalMonthCosts(
+    vehicle.maintenanceHistory,
+    costSummaryMonthKey,
+  );
+  const monthlyVehicleTotal = monthlyGasTotal + monthlyMaintenanceTotal;
 
   // The shell handles click and keyboard flipping while the details sections
   // stop click propagation so they can expand without flipping the card back.
@@ -148,7 +207,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       >
         <span
           className={`absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border bg-white text-left shadow-sm [backface-visibility:hidden] ${
-            styles.card
+            isArchived ? "border-slate-300 bg-slate-100 shadow-none" : styles.card
           }`}
         >
           <span className="relative block h-80 overflow-hidden bg-slate-100">
@@ -157,9 +216,16 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
               alt={`${vehicle.title} vehicle photo`}
               fill
               sizes="(min-width: 1024px) 384px, 100vw"
-              className={`object-cover transition duration-500 group-hover:scale-105 ${styles.image}`}
+              className={`object-cover transition duration-500 group-hover:scale-105 ${
+                isArchived ? "grayscale opacity-75" : styles.image
+              }`}
               priority={vehicle.id === "unit-12"}
             />
+            {isArchived ? (
+              <span className="absolute left-4 top-4 rounded-full border border-slate-300 bg-white/90 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">
+                Archived
+              </span>
+            ) : null}
             {showFrontBadge ? (
               <span
                 className={`absolute right-4 top-4 flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm ${styles.frontBadge}`}
@@ -171,7 +237,9 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           </span>
 
           <span
-            className={`flex flex-1 flex-col justify-between p-6 ${styles.body}`}
+            className={`flex flex-1 flex-col justify-between p-6 ${
+              isArchived ? "bg-slate-100" : styles.body
+            }`}
           >
             <span>
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -183,11 +251,16 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
               <span className="mt-4 block rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600">
                 Click card to view details
               </span>
+              {isArchived ? (
+                <span className="mt-3 block rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+                  Archive reason: {vehicle.archiveReason || "Other"}
+                </span>
+              ) : null}
             </span>
 
             <span className="grid grid-cols-2 gap-3 text-sm">
-              <span className="rounded-md bg-slate-900 px-4 py-3 text-white">
-                <span className="block text-xs text-slate-300">Driver</span>
+              <span className="rounded-md border border-slate-200 bg-white px-4 py-3 text-slate-900">
+                <span className="block text-xs text-slate-500">Driver</span>
                 <span className="mt-1 block font-semibold">
                   {vehicle.assignedDriver}
                 </span>
@@ -207,7 +280,11 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
         </span>
 
         <span
-          className={`absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border p-6 text-left shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)] ${styles.card} ${styles.body}`}
+          className={`absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border p-6 text-left shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+            isArchived
+              ? "border-slate-300 bg-slate-100 shadow-none"
+              : `${styles.card} ${styles.body}`
+          }`}
         >
           <span className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
             <span>
@@ -220,10 +297,10 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             </span>
             <span
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                styles.statusBadge
+                isArchived ? "bg-slate-800 text-white" : styles.statusBadge
               }`}
             >
-              {vehicle.status}
+              {isArchived ? "Archived" : vehicle.status}
             </span>
           </span>
 
@@ -243,15 +320,20 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
               label="Inspection"
               value={formatDate(vehicle.inspectionExpiration)}
             />
+            <DetailRow label="Status" value={vehicle.status} />
           </dl>
 
           <section
             className={`mt-4 rounded-md border p-3 ${styles.warningsPanel}`}
           >
             <h3 className={`text-sm font-bold ${styles.warningsHeading}`}>
-              Warnings
+              {isArchived ? "Archive note" : "Warnings"}
             </h3>
-            {hasWarnings ? (
+            {isArchived ? (
+              <p className="mt-2 text-sm text-slate-700">
+                Reason: {vehicle.archiveReason || "Other"}
+              </p>
+            ) : hasWarnings ? (
               <ul className={`mt-2 space-y-1 text-sm ${styles.warningsText}`}>
                 {vehicle.warnings.map((warning) => (
                   <li key={warning}>- {warning}</li>
@@ -264,68 +346,68 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             )}
           </section>
 
-          {/* Native details elements keep the demo small while still expandable. */}
-          <div
-            className="mt-4 space-y-3 overflow-y-auto pr-1"
+          <section className="mt-4 grid grid-cols-3 gap-2">
+            <DetailRow
+              label={`Gas ${costSummaryMonth}`}
+              value={formatMonthlyCost(monthlyGasTotal, "No gas")}
+            />
+            <DetailRow
+              label={`Maint. ${costSummaryMonth}`}
+              value={formatMonthlyCost(monthlyMaintenanceTotal, "No maint.")}
+            />
+            <DetailRow
+              label={`Cost ${costSummaryMonth}`}
+              value={formatMonthlyCost(monthlyVehicleTotal, "No cost")}
+            />
+          </section>
+
+          <span
+            className="mt-4 flex flex-wrap gap-2"
             onClick={(event) => event.stopPropagation()}
           >
-            <details className="rounded-md border border-slate-200 bg-white">
-              <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-slate-950">
-                Gas expenses
-              </summary>
-              <div className="border-t border-slate-200 px-4 py-3">
-                <ul className="space-y-3">
-                  {vehicle.gasExpenses.map((expense) => (
-                    <li
-                      key={expense.id}
-                      className="flex items-center justify-between gap-3 text-sm"
-                    >
-                      <span>
-                        <span className="block font-semibold text-slate-900">
-                          {formatDate(expense.date)}
-                        </span>
-                        <span className="block text-slate-500">
-                          {expense.gallons.toFixed(1)} gallons
-                        </span>
-                      </span>
-                      <span className="font-bold text-slate-950">
-                        {currencyFormatter.format(expense.amount)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </details>
+            {isArchived ? (
+              <button
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                onClick={() => onRestore?.(vehicle.id)}
+                type="button"
+              >
+                Restore
+              </button>
+            ) : (
+              <>
+                <button
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  onClick={() => onViewGasRecords?.(vehicle)}
+                  type="button"
+                >
+                  Gas records
+                </button>
+                <button
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  onClick={() => onViewMaintenanceRecords?.(vehicle)}
+                  type="button"
+                >
+                  Maintenance
+                </button>
+                <button
+                  className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  onClick={() => onEdit?.(vehicle)}
+                  type="button"
+                >
+                  Edit vehicle
+                </button>
+                <button
+                  className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                  onClick={() => onArchive?.(vehicle.id)}
+                  type="button"
+                >
+                  Archive vehicle
+                </button>
+              </>
+            )}
+          </span>
 
-            <details className="rounded-md border border-slate-200 bg-white">
-              <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-slate-950">
-                Maintenance history
-              </summary>
-              <div className="border-t border-slate-200 px-4 py-3">
-                <ul className="space-y-3">
-                  {vehicle.maintenanceHistory.map((record) => (
-                    <li key={record.id} className="text-sm">
-                      <span className="flex items-start justify-between gap-3">
-                        <span>
-                          <span className="block font-semibold text-slate-900">
-                            {record.service}
-                          </span>
-                          <span className="block text-slate-500">
-                            {formatDate(record.date)} at {record.vendor}
-                          </span>
-                        </span>
-                        <span className="font-bold text-slate-950">
-                          {currencyFormatter.format(record.amount)}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </details>
-          </div>
-
-          <span className="mt-auto block pt-4 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="block pt-4 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
             Click card to return
           </span>
         </span>

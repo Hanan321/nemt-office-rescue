@@ -5,6 +5,27 @@ export type VehicleStatus =
   | "Urgent"
   | "Out of service";
 
+export type GasExpense = {
+  id: string;
+  date: string;
+  gallons: number;
+  amount: number;
+  mileageAtFillUp?: number;
+  vendor?: string;
+  receiptNote?: string;
+};
+
+export type MaintenanceRecord = {
+  id: string;
+  date: string;
+  service: string;
+  description?: string;
+  vendor: string;
+  amount: number;
+  mileage?: number;
+  receiptNote?: string;
+};
+
 export type Vehicle = {
   id: string;
   unitNumber: string;
@@ -18,20 +39,11 @@ export type Vehicle = {
   insuranceExpiration: string;
   inspectionExpiration: string;
   imageUrl: string;
+  archived?: boolean;
+  archiveReason?: string;
   warnings: string[];
-  gasExpenses: {
-    id: string;
-    date: string;
-    gallons: number;
-    amount: number;
-  }[];
-  maintenanceHistory: {
-    id: string;
-    date: string;
-    service: string;
-    vendor: string;
-    amount: number;
-  }[];
+  gasExpenses: GasExpense[];
+  maintenanceHistory: MaintenanceRecord[];
 };
 
 // Local seed data for the first milestone. Later milestones can swap this
@@ -305,8 +317,8 @@ export const vehicles: Vehicle[] = [
   {
     id: "unit-17",
     unitNumber: "17",
-    makeModel: "Ford Transit",
-    title: "Unit 17 - Ford Transit",
+    makeModel: "Kia Carnival",
+    title: "Unit 17 - Kia Carnival",
     vin: "1FTYE1CM3MKA24873",
     plateNumber: "NEMT-177",
     mileage: 31844,
@@ -333,8 +345,8 @@ export const vehicles: Vehicle[] = [
   {
     id: "unit-18",
     unitNumber: "18",
-    makeModel: "Toyota Sienna",
-    title: "Unit 18 - Toyota Sienna",
+    makeModel: "Ford Transit",
+    title: "Unit 18 - Ford Transit",
     vin: "5TDYRKEC7PS118306",
     plateNumber: "NEMT-188",
     mileage: 24190,
@@ -364,8 +376,8 @@ export const vehicles: Vehicle[] = [
   {
     id: "unit-19",
     unitNumber: "19",
-    makeModel: "Chrysler Voyager",
-    title: "Unit 19 - Chrysler Voyager",
+    makeModel: "Ford E-450 Shuttle Bus",
+    title: "Unit 19 - Ford E-450 Shuttle Bus",
     vin: "2C4RC1DG3MR584219",
     plateNumber: "NEMT-199",
     mileage: 56305,
