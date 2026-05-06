@@ -443,38 +443,11 @@ export default function VehicleFleet() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-slate-950">
-              Fleet records
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-              Add vehicles and review active fleet status, warnings, gas
-              expenses, and maintenance notes.
-            </p>
-            {errorMessage ? (
-              <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
-                {errorMessage}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              className="rounded-md bg-blue-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              onClick={() => {
-                setDraft(createVehicleDraft());
-                setEditorMode("create");
-              }}
-              type="button"
-            >
-              Add vehicle
-            </button>
-          </div>
-        </div>
-
-      </section>
+      {errorMessage ? (
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
+          {errorMessage}
+        </p>
+      ) : null}
 
       <section
         aria-label="Filter vehicles by fleet summary"
@@ -590,6 +563,16 @@ export default function VehicleFleet() {
             Admin tools
           </summary>
           <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+            <button
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              onClick={() => {
+                setDraft(createVehicleDraft());
+                setEditorMode("create");
+              }}
+              type="button"
+            >
+              Add vehicle
+            </button>
             <button
               className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               onClick={() => downloadVehicles(vehicles)}
