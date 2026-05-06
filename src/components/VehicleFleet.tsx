@@ -67,8 +67,9 @@ const statusFilters: VehicleStatus[] = [
 ];
 
 const filters: FleetFilter[] = ["All", ...statusFilters];
-// TODO: Restore vehicle edit/create controls here after an Admin-only user mode is available.
-const canManageVehicles = false;
+const canCreateVehicles = true;
+// Keep card-level edits unavailable to reduce accidental vehicle record changes.
+const canEditVehicles = false;
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -497,7 +498,7 @@ export default function VehicleFleet() {
               key={vehicle.id}
               onArchive={handleArchive}
               onEdit={
-                canManageVehicles
+                canEditVehicles
                   ? (vehicle) => {
                       setDraft(createVehicleDraft(vehicle));
                       setEditorMode("edit");
@@ -569,7 +570,7 @@ export default function VehicleFleet() {
             Admin tools
           </summary>
           <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
-            {canManageVehicles ? (
+            {canCreateVehicles ? (
               <button
                 className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 onClick={() => {
