@@ -180,6 +180,15 @@ export default function VehicleCard({
     costSummaryMonthKey,
   );
   const monthlyVehicleTotal = monthlyGasTotal + monthlyMaintenanceTotal;
+  const actionsGridClass = onEdit
+    ? "mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4"
+    : "mt-4 grid grid-cols-3 gap-2";
+  const neutralActionClass =
+    "min-w-0 rounded-md border border-slate-300 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+  const editActionClass =
+    "min-w-0 rounded-md border border-blue-200 bg-blue-50 px-2 py-2 text-center text-xs font-bold leading-tight text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+  const archiveActionClass =
+    "min-w-0 rounded-md border border-amber-300 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-amber-800 transition hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500";
 
   // The shell handles click and keyboard flipping while the details sections
   // stop click propagation so they can expand without flipping the card back.
@@ -361,13 +370,10 @@ export default function VehicleCard({
             />
           </section>
 
-          <span
-            className="mt-4 flex flex-wrap gap-2"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <span className={actionsGridClass} onClick={(event) => event.stopPropagation()}>
             {isArchived ? (
               <button
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className={neutralActionClass}
                 onClick={() => onRestore?.(vehicle.id)}
                 type="button"
               >
@@ -376,28 +382,30 @@ export default function VehicleCard({
             ) : (
               <>
                 <button
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className={neutralActionClass}
                   onClick={() => onViewGasRecords?.(vehicle)}
                   type="button"
                 >
                   Gas records
                 </button>
                 <button
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className={neutralActionClass}
                   onClick={() => onViewMaintenanceRecords?.(vehicle)}
                   type="button"
                 >
                   Maintenance
                 </button>
+                {onEdit ? (
+                  <button
+                    className={editActionClass}
+                    onClick={() => onEdit(vehicle)}
+                    type="button"
+                  >
+                    Edit vehicle
+                  </button>
+                ) : null}
                 <button
-                  className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-800 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  onClick={() => onEdit?.(vehicle)}
-                  type="button"
-                >
-                  Edit vehicle
-                </button>
-                <button
-                  className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                  className={archiveActionClass}
                   onClick={() => onArchive?.(vehicle.id)}
                   type="button"
                 >
